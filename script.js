@@ -95,13 +95,20 @@ function ucfirst(string) {
 function renderMovies(movies)
 {
     let rendered = ""
+    const trackers = "&tr=https://tracker.nanoha.org:443/announce&tr=https://tracker.nitrix.me:443/announce&tr=https://tracker.tamersunion.org:443/announce&tr=http://tracker-cdn.moeking.me:2095/announce&tr=https://tr.torland.ga:443/announce&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969"
+
     movies.forEach(movie => {
         let img = movie["large_cover_image"]
         let description = movie["summary"]
         let title = movie["title_long"]
         let torrents = ""
+        let magnets = ""
         movie["torrents"].forEach(torrent=>{
-            torrents += `<br><a href="${torrent["url"]}" target="_blank">${ucfirst(torrent["type"])} | ${torrent["quality"]} ${torrent["size"]}</a>`
+            torrents += `<br>Torrent: <a href="${torrent["url"]}" target="_blank">${ucfirst(torrent["type"])} | ${torrent["quality"]} ${torrent["size"]}</a>`
+
+            let magnet = `magnet:?xt=urn:btih:${torrent["hash"]}&dn=${encodeURI(title)}${trackers}`
+
+            magnets += `<br>Magnet: <a href="${magnet}" target="_blank">${ucfirst(torrent["type"])} | ${torrent["quality"]} ${torrent["size"]}</a>`
         })
         rendered += `<div class="col">
         <div class="card mx-3 my-3" style="width: 18rem;">
@@ -115,7 +122,7 @@ function renderMovies(movies)
           <p class="card-text">
             ${description}
           </p>
-          ${torrents}
+          ${torrents}<br>${magnets}
         </div>
       </div>
         </div>`

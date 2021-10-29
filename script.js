@@ -4,57 +4,61 @@ let max_page = 1;
 let query;
 let search_response = sessionStorage.getItem("search_response")
 if (searchParams.has("page")) page = searchParams.get("page")
-if (search_response != null)
-{
+if (search_response != null) {
     updateResponse()
     search_response = JSON.parse(search_response)
     parseResponse(search_response)
 }
-$("#txt_SearchField").keydown(function(e)
-{
-    if (e.keyCode === 13)
-    {
+$("#txt_SearchField").keydown(function(e) {
+    if (e.keyCode === 13) {
         e.preventDefault()
         $("#btn_Search").click()
     }
 })
-$("#btn_Search").click(function()
-{
+$("#btn_Search").click(function() {
     query = $("#txt_SearchField").val()
-    if (query == undefined || query == "") 
-    {
+    if (query == undefined || query == "") {
         alert("Query is empty!")
         return
     }
-    sessionStorage.setItem("query",query)
+    sessionStorage.setItem("query", query)
     $.ajax({
         url: `https://yts.mx/api/v2/list_movies.json?limit=10&page=${page.toString()}&sort_by=year&order_by=desc&query_term=${query}`,
         dataType: 'json',
-        success: function(data) 
-        {
-            sessionStorage.setItem("search_response",JSON.stringify(data))
+        success: function(data) {
+            sessionStorage.setItem("search_response", JSON.stringify(data))
             parseResponse(data)
         }
     })
 })
-function parseResponse(response)
-{
+
+function parseResponse(response) {
     renderPagination(response["data"]["movie_count"])
     renderMovies(response["data"]["movies"])
 }
 
-function renderPagination(movie_count)
-{   
+function renderPagination(movie_count) {
     if (searchParams.has("page")) page = parseInt(searchParams.get("page"))
     max_page = movie_count / 10;
     if (max_page % 1 > 0) max_page += 1
-    
-    let json = 
-    {
-        previous: {value:page-1,disabled:""},
-        current: {value:page,disabled:""},
-        nextpage: {value:page+1,disabled:""},
-        lastpage: {value:page+2,disabled:""}
+
+    let json = {
+        previous: {
+            value: page - 1,
+            disabled: ""
+        },
+        current: {
+            value: page,
+            disabled: ""
+        },
+        nextpage: {
+            value: page + 1,
+            disabled: ""
+        },
+        lastpage: {
+            value: page + 2,
+            disabled: ""
+        }
     }
     if (json["previous"]["value"] < 1) json["previous"]["disabled"] = "disabled"
     if (json["previous"]["value"] > max_page) json["previous"]["value"] = 1
@@ -75,14 +79,12 @@ function renderPagination(movie_count)
     $(".pagination").html(pagination)
 }
 
-function updateResponse()
-{
+function updateResponse() {
     $.ajax({
         url: `https://yts.mx/api/v2/list_movies.json?limit=10&page=${page.toString()}&sort_by=year&order_by=desc&query_term=${sessionStorage.getItem("query")}`,
         dataType: 'json',
-        success: function(data) 
-        {
-            sessionStorage.setItem("search_response",JSON.stringify(data))
+        success: function(data) {
+            sessionStorage.setItem("search_response", JSON.stringify(data))
             parseResponse(data)
         }
     })
@@ -90,10 +92,9 @@ function updateResponse()
 
 function ucfirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
-  }
+}
 
-function renderMovies(movies)
-{
+function renderMovies(movies) {
     let rendered = ""
     const trackers = "&tr=https://tracker.nanoha.org:443/announce&tr=https://tracker.nitrix.me:443/announce&tr=https://tracker.tamersunion.org:443/announce&tr=http://tracker-cdn.moeking.me:2095/announce&tr=https://tr.torland.ga:443/announce&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969"
 
@@ -103,7 +104,7 @@ function renderMovies(movies)
         let title = movie["title_long"]
         let torrents = ""
         let magnets = ""
-        movie["torrents"].forEach(torrent=>{
+        movie["torrents"].forEach(torrent => {
             torrents += `<br>Torrent: <a href="${torrent["url"]}" target="_blank">${ucfirst(torrent["type"])} | ${torrent["quality"]} ${torrent["size"]}</a>`
 
             let magnet = `magnet:?xt=urn:btih:${torrent["hash"]}&dn=${encodeURI(title)}${trackers}`

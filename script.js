@@ -96,12 +96,19 @@ function ucfirst(string) {
 
 function renderMovies(movies) {
     let rendered = ""
+    if (searchParams.has("movie_id")) 
+    {
+        var id = searchParams.get("movie_id");
+        MarkupFromID(id)
+    }
+    //SEARCHONLY
     const trackers = "&tr=https://tracker.nanoha.org:443/announce&tr=https://tracker.nitrix.me:443/announce&tr=https://tracker.tamersunion.org:443/announce&tr=http://tracker-cdn.moeking.me:2095/announce&tr=https://tr.torland.ga:443/announce&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969"
 
     movies.forEach(movie => {
         let img = movie["large_cover_image"]
         let description = movie["summary"]
         let title = movie["title_long"]
+        let id = movie["id"]
         let torrents = ""
         let magnets = ""
         movie["torrents"].forEach(torrent => {
@@ -119,7 +126,9 @@ function renderMovies(movies) {
           alt="..."
         />
         <div class="card-body">
-          <h5 class="card-title">${title}</h5>
+          <a href="?movie_id=${id}" target="_blank">
+            <h5 class="card-title">${title}</h5>
+          </a>
           <p class="card-text">
             ${description}
           </p>
@@ -129,4 +138,78 @@ function renderMovies(movies) {
         </div>`
     });
     $("#movies").html(rendered)
+}
+
+async function MarkupFromID(id) 
+{
+    let response = JSON.parse(sessionStorage.getItem(id))
+    let rendered
+    if (response != null) 
+    {
+        rendered = GenerateHTML(response)
+        $("#movies").html(rendered)
+        return;
+    }
+    await $.ajax({
+        url: `https://yts.mx/api/v2/movie_details.json?movie_id=${id}&with_images=true&with_cast=true`,
+        dataType: 'json',
+        success: function(response) 
+        {
+            sessionStorage.setItem(id, JSON.stringify(response))
+            rendered = GenerateHTML(response)
+        }
+    })
+    $("#movies").html(rendered)
+}
+
+function GenerateHTML(response) 
+{
+    let data
+    const trackers = "&tr=https://tracker.nanoha.org:443/announce&tr=https://tracker.nitrix.me:443/announce&tr=https://tracker.tamersunion.org:443/announce&tr=http://tracker-cdn.moeking.me:2095/announce&tr=https://tr.torland.ga:443/announce&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969"
+    let rendered = ""
+    if (response != null) 
+    {
+        data = response["data"]["movie"]
+        let img = data["large_cover_image"]
+        let description = data["description_intro"]
+        let title = data["title_long"]
+        let id = data["id"]
+        let torrents = ""
+        let magnets = ""
+        let download_count = data["download_count"].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        let genres = data["genres"].join(", ")
+        data["torrents"].forEach(torrent => {
+            torrents += `<br>Torrent: <a href="${torrent["url"]}" target="_blank">${ucfirst(torrent["type"])} | ${torrent["quality"]} ${torrent["size"]}</a>`
+
+            let magnet = `magnet:?xt=urn:btih:${torrent["hash"]}&dn=${encodeURI(title)}${trackers}`
+
+            magnets += `<br>Magnet: <a href="${magnet}" target="_blank">${ucfirst(torrent["type"])} | ${torrent["quality"]} ${torrent["size"]}</a>`
+        })
+        rendered = `<div class="col d-inline-flex shadow-3-strong p-3 rounded-3 flex-wrap"><img
+        src="${img}"
+        class="card-img-top"
+        alt="..."
+      />
+      <div class="card-body">
+        <a href="?movie_id=${id}" target="_blank">
+          <h5 class="card-title">${title}</h5>
+        </a>
+        <p class="card-text">
+          ${description}
+        </p>
+        Genres: ${genres}<br>
+        Download Count: ${download_count}<br>
+        ${torrents}<br>${magnets}
+        <br>
+        <br>
+        <button class="btn-danger btn" onClick="window.close();">Back</button>
+      </div></div>`
+      return rendered
+    }
+}
+if (searchParams.has("movie_id")) 
+{
+    var id = searchParams.get("movie_id");
+    $("#TxtBox").remove()
+    MarkupFromID(id)
 }

@@ -21,6 +21,8 @@ $("#btn_Search").click(function() {
         alert("Query is empty!")
         return
     }
+    
+    $("#movies").html('<div class="d-flex justify-content-center"><div class="spinner-border" role="status"></div></div>');
     sessionStorage.setItem("query", query)
     $.ajax({
         url: `https://yts.mx/api/v2/list_movies.json?limit=10&page=${page.toString()}&sort_by=year&order_by=desc&query_term=${query}`,
@@ -177,6 +179,7 @@ function GenerateHTML(response)
         let torrents = ""
         let magnets = ""
         let download_count = data["download_count"].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        
         let genres = data["genres"].join(", ")
         data["torrents"].forEach(torrent => {
             torrents += `<br>Torrent: <a href="${torrent["url"]}" target="_blank">${ucfirst(torrent["type"])} | ${torrent["quality"]} ${torrent["size"]}</a>`
@@ -204,12 +207,14 @@ function GenerateHTML(response)
         <br>
         <button class="btn-danger btn" onClick="window.close();">Back</button>
       </div></div>`
-      return rendered
+      document.title = title;
     }
+    return rendered
 }
 if (searchParams.has("movie_id")) 
 {
     var id = searchParams.get("movie_id");
     $("#TxtBox").remove()
+    $("#movies").html('<div class="d-flex justify-content-center"><div class="spinner-border" role="status"></div></div>');
     MarkupFromID(id)
 }

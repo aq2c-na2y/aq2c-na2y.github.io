@@ -36,7 +36,7 @@ $("#btn_Search").click(function() {
 
 function parseResponse(response) {
     renderPagination(response["data"]["movie_count"])
-    renderMovies(response["data"]["movies"])
+    renderMovies(response["data"]["movies"], response["data"]["movie_count"]);
 }
 
 function renderPagination(movie_count) {
@@ -96,12 +96,24 @@ function ucfirst(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function renderMovies(movies) {
+function renderMovies(movies, count) {
+    if (count == 0)
+    { 
+        $("#movies").html("<h1>No results found</h1>")
+        sessionStorage.clear();
+        return;
+    }
     let rendered = ""
     if (searchParams.has("movie_id")) 
     {
         var id = searchParams.get("movie_id");
+        if (id != "")
+    {
+        var id = searchParams.get("movie_id");
+        $("#TxtBox").remove()
+        $("#movies").html('<div class="d-flex justify-content-center"><div class="spinner-border" role="status"></div></div>');
         MarkupFromID(id)
+    }
     }
     //SEARCHONLY
     const trackers = "&tr=https://tracker.nanoha.org:443/announce&tr=https://tracker.nitrix.me:443/announce&tr=https://tracker.tamersunion.org:443/announce&tr=http://tracker-cdn.moeking.me:2095/announce&tr=https://tr.torland.ga:443/announce&tr=udp://open.demonii.com:1337/announce&tr=udp://tracker.openbittorrent.com:80&tr=udp://tracker.coppersurfer.tk:6969&tr=udp://glotorrents.pw:6969/announce&tr=udp://tracker.opentrackr.org:1337/announce&tr=udp://torrent.gresille.org:80/announce&tr=udp://p4p.arenabg.com:1337&tr=udp://tracker.leechers-paradise.org:6969"
@@ -172,6 +184,12 @@ function GenerateHTML(response)
     if (response != null) 
     {
         data = response["data"]["movie"]
+        if (data["slug"] == null)
+        {
+            $("#movies").html(`<h1>No movie found with ID: ${searchParams.get('movie_id')}</h1>`)
+            sessionStorage.clear();
+            return;
+        }
         let img = data["large_cover_image"]
         let description = data["description_intro"]
         let title = data["title_long"]
@@ -180,7 +198,14 @@ function GenerateHTML(response)
         let magnets = ""
         let download_count = data["download_count"].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
         
-        let genres = data["genres"].join(", ")
+        let genres = ""
+        try
+        {
+            genres = data["genres"].join(", ")
+        }catch ( error )
+        {
+            console.log(error);
+        }
         data["torrents"].forEach(torrent => {
             torrents += `<br>Torrent: <a href="${torrent["url"]}" target="_blank">${ucfirst(torrent["type"])} | ${torrent["quality"]} ${torrent["size"]}</a>`
 
@@ -212,9 +237,12 @@ function GenerateHTML(response)
     return rendered
 }
 if (searchParams.has("movie_id")) 
-{
-    var id = searchParams.get("movie_id");
-    $("#TxtBox").remove()
-    $("#movies").html('<div class="d-flex justify-content-center"><div class="spinner-border" role="status"></div></div>');
-    MarkupFromID(id)
+{   
+    if (searchParams.get("movie_id") != "")
+    {
+        var id = searchParams.get("movie_id");
+        $("#TxtBox").remove()
+        $("#movies").html('<div class="d-flex justify-content-center"><div class="spinner-border" role="status"></div></div>');
+        MarkupFromID(id)
+    }
 }

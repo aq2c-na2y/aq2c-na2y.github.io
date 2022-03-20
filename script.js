@@ -141,7 +141,7 @@ function renderMovies(movies, count) {
         />
         <div class="card-body">
           <a href="?movie_id=${id}" target="_blank">
-            <h5 class="card-title">${title}</h5>
+            <h5 class="card-title">${title} - ${id}</h5>
           </a>
           <p class="card-text">
             ${description}
